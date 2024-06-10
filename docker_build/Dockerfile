@@ -1,3 +1,4 @@
 FROM tensorflow/tensorflow:2.15.0-gpu-jupyter
 
-# RUN pip 
+RUN pip install transformers
+RUN pip install sentencepiece

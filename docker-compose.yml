@@ -1,0 +1,16 @@
+version: "3"
+services:
+  python:
+    build: docker_build
+    shm_size: '2gb'
+    volumes:
+      - ./:/workspace
+    tty: true
+    command: /bin/bash
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

@@ -2,8 +2,12 @@ from keras.layers import Input
 import keras.layers as layers
 from keras.models import Model
 from transformers import ViTImageProcessor, TFViTModel
+from transformers import T5Tokenizer, TFT5Model
+import keras
+import tensorflow
 
-def VQAModel():
+
+def VQAModel(t5:TFT5Model, tokenizer: T5Tokenizer):
     target_embedding_shape = (15, 512)
     visual_embedding_shape = (197, 768)
     text_embedding_shape = (15, 512)
@@ -30,8 +34,11 @@ def VQAModel():
     #     (text_embedding_shape[0], target_embedding_shape[1])
     # )(x_t)
 
-    x = layers.Concatenate(axis=-1)([x_v, x_t])
+    x = layers.Concatenate(axis=1)([x_v, x_t])
 
+    batch_size = tensorflow.shape(x)[0]
+    decoder_input_ids = tensorflow.constant([[tokenizer.pad_token_id,]*batch_size])
+    x = t5.decoder(input_ids=decoder_input_ids, encoder_hidden_states=x)
 
     # some layers // todo
 
@@ -40,7 +47,6 @@ def VQAModel():
 
 if __name__ == '__main__':
     import tensorflow
-    from transformers import T5Tokenizer, TFT5Model
     from transformers import ViTImageProcessor, TFViTModel
     
     pretrained_t5_path = 'dump/t5-small'
@@ -52,7 +58,7 @@ if __name__ == '__main__':
 
     vit = TFViTModel.from_pretrained(pretrained_vit_path)
     
-    model = VQAModel()
+    model = VQAModel(t5, tokenizer)
 
     text_embedding = t5_encoder(
         tokenizer('I am a Ironman.', return_tensors='tf').input_ids
